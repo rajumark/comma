@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comma — on-device punctuation and capitalisation for Android</title>
+<meta name="description" content="Comma adds commas, full stops, question marks and capitals to voice-typed or unpunctuated text, on-device, in English, Hinglish, Hindi and other Indian languages. ~8 MB, no dependencies, no network.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect x=%221%22 y=%221%22 width=%2222%22 height=%2222%22 rx=%227%22 fill=%22%230c8599%22/><path d=%22M11.2 13.2a2.3 2.3 0 1 1 3.3 2.1c-.3 1.5-1.3 2.8-2.8 3.4l-.5-.8c.9-.5 1.5-1.3 1.7-2.2a2.3 2.3 0 0 1-1.7-2.5Z%22 fill=%22%23fff%22/></svg>">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-subtle: #f5f5f7;
+    --text: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --border: #d2d2d7;
+    --accent: #0c8599;
+    --accent-hover: #0b7285;
+    --code-bg: #f5f5f7;
+    --code-text: #1d1d1f;
+    --card-bg: #ffffff;
+    --nav-bg: rgba(255, 255, 255, 0.8);
+    --pill-bg: #f5f5f7;
+    --syn-comment: #6e7781;
+    --syn-keyword: #cf222e;
+    --syn-string: #0a3069;
+    --syn-number: #0550ae;
+    --syn-function: #8250df;
+    --syn-type: #953800;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000;
+      --bg-subtle: #1d1d1f;
+      --text: #f5f5f7;
+      --text-secondary: #a1a1a6;
+      --border: #424245;
+      --accent: #22b8cf;
+      --accent-hover: #3bc9db;
+      --code-bg: #1d1d1f;
+      --code-text: #f5f5f7;
+      --card-bg: #1d1d1f;
+      --nav-bg: rgba(0, 0, 0, 0.8);
+      --pill-bg: #2c2c2e;
+      --syn-comment: #8b949e;
+      --syn-keyword: #ff7b72;
+      --syn-string: #a5d6ff;
+      --syn-number: #79c0ff;
+      --syn-function: #d2a8ff;
+      --syn-type: #ffa657;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000;
+    --bg-subtle: #1d1d1f;
+    --text: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --border: #424245;
+    --accent: #22b8cf;
+    --accent-hover: #3bc9db;
+    --code-bg: #1d1d1f;
+    --code-text: #f5f5f7;
+    --card-bg: #1d1d1f;
+    --nav-bg: rgba(0, 0, 0, 0.8);
+    --pill-bg: #2c2c2e;
+    --syn-comment: #8b949e;
+    --syn-keyword: #ff7b72;
+    --syn-string: #a5d6ff;
+    --syn-number: #79c0ff;
+    --syn-function: #d2a8ff;
+    --syn-type: #ffa657;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-hover); }
+
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--nav-bg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 980px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 22px; height: 48px;
+    font-size: 14px;
+  }
+  .nav-brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text); }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: var(--text); font-size: 12px; opacity: 0.85; }
+  .nav-links a:hover { opacity: 1; }
+  .nav-cta {
+    font-size: 12px; padding: 6px 14px; border-radius: 980px;
+    background: var(--accent); color: #fff !important; opacity: 1 !important;
+  }
+  .nav-cta:hover { background: var(--accent-hover); }
+
+  /* Hero */
+  .hero {
+    max-width: 980px; margin: 0 auto;
+    padding: 90px 22px 60px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    font-size: 17px; font-weight: 600; color: var(--accent); margin-bottom: 8px;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 64px);
+    font-weight: 700; letter-spacing: -0.015em;
+    margin: 0 0 12px; line-height: 1.05;
+  }
+  .hero p.tagline {
+    font-size: clamp(19px, 3vw, 24px);
+    color: var(--text-secondary);
+    max-width: 640px; margin: 0 auto 32px;
+    font-weight: 400;
+  }
+  .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .hero-trust { font-size: 13px; color: var(--text-secondary); text-align: center; margin: 0 0 48px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 11px 22px; border-radius: 980px; font-size: 15px; font-weight: 400;
+    border: 1px solid transparent; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #fff !important; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: transparent; color: var(--accent) !important; border-color: var(--accent); }
+  .btn-secondary:hover { background: var(--accent); color: #fff !important; }
+
+  .hero-demo {
+    background: var(--bg-subtle);
+    border-radius: 18px;
+    padding: 28px;
+    text-align: left;
+    max-width: 640px; margin: 0 auto;
+    border: 1px solid var(--border);
+    transition: opacity 0.35s ease;
+  }
+  .hero-demo.is-fading { opacity: 0; }
+  .hero-demo .prompt { color: var(--text-secondary); font-size: 13px; margin-bottom: 10px; }
+  .hero-demo .input-row {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; font-size: 15px; margin-bottom: 14px;
+  }
+  .emoji-row { display: flex; gap: 10px; flex-wrap: wrap; font-size: 28px; }
+  .emoji-row span { transition: transform 0.15s; }
+
+  /* Sections */
+  section { max-width: 980px; margin: 0 auto; padding: 70px 22px; border-top: 1px solid var(--border); }
+  section:first-of-type { border-top: none; }
+  .section-head { text-align: center; margin-bottom: 44px; }
+  .section-head .kicker {
+    font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .section-head h2 { font-size: clamp(30px, 4vw, 40px); font-weight: 700; letter-spacing: -0.01em; margin: 0 0 10px; }
+  .section-head p { color: var(--text-secondary); font-size: 18px; max-width: 620px; margin: 0 auto; }
+
+  /* Feature grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .card {
+    background: var(--bg-subtle); border-radius: 18px; padding: 28px;
+    border: 1px solid var(--border);
+  }
+  .card .icon { width: 30px; height: 30px; margin-bottom: 14px; color: var(--accent); display: block; }
+  .card .icon svg { display: block; width: 100%; height: 100%; }
+  .card h3 { font-size: 19px; font-weight: 600; margin: 0 0 8px; }
+  .card p { font-size: 14px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    border-radius: 14px; padding: 20px 22px; overflow-x: auto;
+    font-size: 13.5px; line-height: 1.6; border: 1px solid var(--border);
+    margin: 0;
+  }
+  code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  .hljs-comment, .hljs-quote { color: var(--syn-comment); font-style: italic; }
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-meta .hljs-keyword { color: var(--syn-keyword); }
+  .hljs-string, .hljs-doctag, .hljs-regexp { color: var(--syn-string); }
+  .hljs-number { color: var(--syn-number); }
+  .hljs-title, .hljs-title.function_, .hljs-title.class_ { color: var(--syn-function); }
+  .hljs-built_in, .hljs-type, .hljs-class { color: var(--syn-type); }
+  .hljs-variable, .hljs-attr, .hljs-params, .hljs-property { color: var(--code-text); }
+  .hljs-meta { color: var(--syn-comment); }
+  .code-label {
+    font-size: 12px; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+  }
+  .code-block { margin-bottom: 22px; }
+  .tag-pill {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 10px;
+    border-radius: 980px; background: var(--pill-bg); color: var(--text-secondary);
+    margin-left: 8px; vertical-align: 2px;
+  }
+  .tag-pill.live { background: #d1f7dd; color: #0a6b2c; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Use cases */
+  .usecase-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .usecase {
+    display: flex; gap: 16px; padding: 22px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+  }
+  .usecase .icon { width: 26px; height: 26px; flex: none; color: var(--accent); }
+  .usecase .icon svg { display: block; width: 100%; height: 100%; }
+  .usecase h4 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .usecase p { margin: 0; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* API table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-secondary); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td code { background: var(--code-bg); padding: 2px 6px; border-radius: 5px; font-size: 12.5px; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+  .stat-card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px;
+    padding: 24px 20px; text-align: center;
+  }
+  .stat-card .stat-value { font-size: clamp(28px, 4vw, 36px); font-weight: 700; letter-spacing: -0.01em; color: var(--accent); }
+  .stat-card .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text); margin-top: 6px; }
+  .stat-card .stat-note { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+
+  /* Use-case example line */
+  .usecase .example {
+    display: block; margin-top: 10px; font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--text-secondary); background: var(--code-bg); border-radius: 8px;
+    padding: 7px 10px;
+  }
+
+  /* Copy button on code blocks */
+  .code-block { position: relative; }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-secondary); font-size: 11px; font-weight: 600;
+    padding: 5px 9px; cursor: pointer; font-family: inherit;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--text-secondary); }
+  .copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+  /* Prompt block for AI coding agents */
+  .prompt-block {
+    background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px; margin-top: 16px;
+  }
+  .prompt-block .code-label { margin-bottom: 10px; }
+  .prompt-block pre { background: var(--card-bg); }
+
+  /* FAQ */
+  .faq-item { border-bottom: 1px solid var(--border); padding: 20px 0; }
+  .faq-item:first-child { padding-top: 0; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-item h4 { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+  .faq-item p { font-size: 14.5px; color: var(--text-secondary); margin: 0; line-height: 1.6; }
+  /* Pricing */
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+  @media (max-width: 860px) { .price-grid { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; } }
+  .nowrap { white-space: nowrap; }
+  .price-card {
+    position: relative; display: flex; flex-direction: column;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 28px 24px;
+  }
+  .price-card.featured { border: 2px solid var(--accent); }
+  .price-badge {
+    position: absolute; top: -12px; left: 24px;
+    background: var(--accent); color: #fff; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 980px;
+  }
+  .price-card .plan { font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); }
+  .price-card .price { font-size: 34px; font-weight: 700; letter-spacing: -0.01em; margin: 8px 0 4px; }
+  .price-card .price-sub { font-size: 14px; color: var(--text-secondary); margin: 0 0 18px; min-height: 42px; }
+  .price-card ul { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; }
+  .price-card li { position: relative; padding-left: 24px; font-size: 14px; line-height: 1.5; margin-bottom: 10px; }
+  .price-card li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  .price-card .btn { text-align: center; }
+  .price-contact { display: flex; gap: 8px; flex-wrap: wrap; }
+  .price-contact .btn { flex: 1; padding-left: 12px; padding-right: 12px; font-size: 14px; }
+  .price-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 28px; }
+  @media (max-width: 720px) { .price-rules { grid-template-columns: 1fr; } }
+  .price-rules > div { background: var(--bg-subtle); border-radius: 18px; padding: 24px; }
+  .price-rules h3 { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+  .price-rules p, .price-rules li { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+  .price-rules p { margin: 0 0 10px; }
+  .price-rules ul { margin: 0; padding-left: 18px; }
+  .price-rules li { margin-bottom: 6px; }
+  .price-foot { text-align: center; font-size: 14px; color: var(--text-secondary); margin: 26px 0 0; }
+
+
+  /* Footer */
+  footer {
+    max-width: 980px; margin: 0 auto; padding: 50px 22px 80px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  }
+  footer .foot-links { display: flex; gap: 22px; flex-wrap: wrap; }
+  footer .foot-links a { font-size: 13px; color: var(--text-secondary); }
+  footer .copyright { font-size: 12px; color: var(--text-secondary); }
+
+  .bubble { display:inline-block; background: var(--card-bg); border:1px solid var(--border); border-radius:18px 18px 18px 6px;
+    padding:10px 16px; font-size:16px; margin-bottom:16px; }
+  .chip-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .chip-row span { border:1px solid var(--accent); color: var(--accent); border-radius:980px; padding:7px 16px; font-size:14.5px; background: var(--card-bg); }
+
+  .shot { padding:0; overflow:hidden; }
+  .shot img { width:100%; display:block; border-bottom:1px solid var(--border); }
+  .shot-caption { padding:20px; }
+  .table-note { font-size:14px; color:var(--text-secondary); margin-top:18px; line-height:1.6; }
+  .table-wrap { overflow-x:auto; }
+  @media (max-width: 720px) { .nav-links { display:none; } .hero { padding-top:60px; } }
+  .verdict { border-radius:980px; padding:7px 16px; font-size:14.5px; font-weight:500; border:1px solid var(--border); background: var(--card-bg); }
+  .verdict.ok { color:#1b873f; border-color:#1b873f; }
+  .verdict.bad { color:#d1242f; border-color:#d1242f; }
+  .verdict.score { color: var(--text-secondary); }
+  .chip-row .restored { font-size: 17px; font-weight: 500; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="1" width="22" height="22" rx="7" fill="var(--accent)"/><path d="M11.2 13.2a2.3 2.3 0 1 1 3.3 2.1c-.3 1.5-1.3 2.8-2.8 3.4l-.5-.8c.9-.5 1.5-1.3 1.7-2.2a2.3 2.3 0 0 1-1.7-2.5Z" fill="#fff"/></svg>
+      Comma
+    </div>
+    <div class="nav-links">
+      <a href="#screenshots">Screenshots</a>
+      <a href="#install">Install</a>
+      <a href="#usage">Usage</a>
+      <a href="#quality">Quality</a>
+      <a href="#api">API</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a class="nav-cta" href="https://github.com/rajumark/comma">GitHub ↗</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Comma · by Hoverfly</div>
+  <h1>Voice-typed text,<br>ready to read.</h1>
+  <p class="tagline">Add commas, full stops, question marks and capitals to unpunctuated text on the phone itself. English, Hinglish, Hindi, Tamil, Telugu, Bengali, Urdu and more, with each script's own marks, in an 8 MB AAR.</p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="#install">Get started</a>
+    <a class="btn btn-secondary" href="https://github.com/rajumark/comma">View source</a>
+  </div>
+  <p class="hero-trust">Free up to 10k monthly active devices · No API key · Live on JitPack</p>
+  <div class="hero-demo" id="heroDemo">
+    <div class="prompt" id="demoPrompt">comma.restore("can you pick up the kids at 5 i am stuck in a meeting")</div>
+    <div class="bubble" id="demoInput">can you pick up the kids at 5 i am stuck in a meeting</div>
+    <div class="chip-row" id="demoChips"></div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="section-head">
+    <div class="kicker">Why Comma</div>
+    <h2>Readable text, without the cloud</h2>
+    <p>No server, no API key, no per-request bill. A small Kotlin library that you can read, test and ship.</p>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h10M4 19h7"/><path d="M17 15l2 4 2-4"/></svg></span>
+      <h3>Made for Indian text</h3>
+      <p>Hinglish and Tanglish chat, and Hindi, Bengali, Marathi, Gujarati, Punjabi, Tamil, Telugu, Kannada, Malayalam and Urdu in their own scripts, plus English and six European languages.</p>
+    </div>
+    <div class="card">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M6 21h12"/></svg></span>
+      <h3>The right marks</h3>
+      <p>A full stop is <code>।</code> in Hindi, Marathi, Bengali and Punjabi and <code>۔</code> in Urdu, where questions end in <code>؟</code>. Capitals for sentence starts, names and acronyms like NASA.</p>
+    </div>
+    <div class="card">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5 12 3 3 8.5v7L12 21l9-5.5v-7Z"/><path d="M3 8.5 12 14l9-5.5"/><path d="M12 14v7"/></svg></span>
+      <h3>No dependencies</h3>
+      <p>Pure Kotlin inference. There is no ONNX Runtime, TFLite, ML Kit or native code, and it works from minSdk 21 in Kotlin or Java.</p>
+    </div>
+    <div class="card">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+      <h3>Private &amp; offline</h3>
+      <p>The model ships inside the AAR. It makes no network calls, needs no permissions and sends no telemetry, so what people dictate never leaves the phone.</p>
+    </div>
+  </div>
+  <div class="stat-grid" style="margin-top: 40px;">
+    <div class="stat-card"><div class="stat-value">~10ms</div><div class="stat-label">Per message</div><div class="stat-note">Android emulator, once warm</div></div>
+    <div class="stat-card"><div class="stat-value">~8MB</div><div class="stat-label">On-device</div><div class="stat-note">model + tokenizer</div></div>
+    <div class="stat-card"><div class="stat-value">19</div><div class="stat-label">Languages</div><div class="stat-note">plus Hinglish and Tanglish</div></div>
+    <div class="stat-card"><div class="stat-value">0</div><div class="stat-label">Dependencies</div><div class="stat-note">no native code</div></div>
+  </div>
+</section>
+
+<section id="screenshots">
+  <div class="section-head">
+    <div class="kicker">On device</div>
+    <h2>Type it plain, read it right</h2>
+    <p>Real output from the sample app on an Android emulator. These are not mockups.</p>
+  </div>
+  <div class="grid">
+    <div class="card shot">
+      <img src="screenshots/comma-english.png" alt="Comma restores an English message" loading="lazy">
+      <div class="shot-caption"><h3>English</h3><p>"Can you pick up the kids at 5? I am stuck in a meeting."</p></div>
+    </div>
+    <div class="card shot">
+      <img src="screenshots/comma-hindi.png" alt="Comma restores a Hindi message with a danda" loading="lazy">
+      <div class="shot-caption"><h3>Hindi</h3><p>"आप कैसे हैं? मैं ठीक हूँ।"</p></div>
+    </div>
+    <div class="card shot">
+      <img src="screenshots/comma-hinglish.png" alt="Comma restores a Hinglish message" loading="lazy">
+      <div class="shot-caption"><h3>Hinglish</h3><p>"Kal milte hain, OK, bye. Take care."</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="section-head">
+    <div class="kicker">Install</div>
+    <h2>Add it to your build</h2>
+    <p>One line in your Gradle file, available now via JitPack. No API key, no account.</p>
+  </div>
+  <div class="code-block">
+    <div class="code-label">JitPack <span class="tag-pill live">live</span></div>
+    <button class="copy-btn" type="button">Copy</button>
+    <pre><code class="language-kotlin">// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
+// build.gradle.kts
+dependencies {
+    implementation("com.github.rajumark:comma:v1.0.0")
+}</code></pre>
+  </div>
+  <div class="prompt-block">
+    <div class="code-label">Build with a prompt</div>
+    <div class="code-block">
+      <button class="copy-btn" type="button">Copy</button>
+      <pre><code>Add Comma from rajumark to this Android project (Kotlin).
+
+What it does: on-device punctuation and capitalisation. Given unpunctuated or voice-typed text, it adds commas, full stops, question marks, exclamation marks and capitals. English, Hinglish, Hindi and other Indian languages. ~8 MB, no dependencies, no network.
+
+Install (JitPack):
+  settings.gradle.kts: add maven { url = uri("https://jitpack.io") } to repositories
+  build.gradle.kts: implementation("com.github.rajumark:comma:v1.0.0")
+
+Usage:
+  val comma = Comma(context)            // off the main thread, keep one instance
+  val text = comma.restore(transcript)  // "Can you pick up the kids at 5? I am stuck in a meeting."
+
+Repo: https://github.com/rajumark/comma#readme
+Add the dependency, then follow the README for the exact API and current version.</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="usage">
+  <div class="section-head">
+    <div class="kicker">Usage</div>
+    <h2>One call per message</h2>
+    <p>Load once and reuse the instance. <code>restore()</code> is thread-safe.</p>
+  </div>
+  <div class="two-col">
+    <div class="code-block">
+      <div class="code-label">Kotlin</div>
+      <button class="copy-btn" type="button">Copy</button>
+      <pre><code class="language-kotlin">val comma = Comma(context)
+
+comma.restore("where are you we are all waiting outside")
+// "Where are you? We are all waiting outside."
+
+comma.restore("آپ کیسے ہیں میں ٹھیک ہوں")
+// "آپ کیسے ہیں؟ میں ٹھیک ہوں۔"
+
+comma.close()</code></pre>
+    </div>
+    <div class="code-block">
+      <div class="code-label">Java</div>
+      <button class="copy-btn" type="button">Copy</button>
+      <pre><code class="language-java">try (Comma comma = new Comma(context)) {
+    String text = comma.restore(
+        "can you pick up the kids at 5 i am stuck in a meeting");
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<section id="use-cases">
+  <div class="section-head">
+    <div class="kicker">Use cases</div>
+    <h2>Where Comma fits</h2>
+    <p>Anywhere text arrives without punctuation.</p>
+  </div>
+  <div class="usecase-list">
+    <div class="usecase">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+      <div><h4>Voice typing &amp; dictation</h4><p>Clean up speech-to-text output before it goes into a message, note or form.</p><code class="example">"where are you we are all waiting outside" → Where are you? We are all waiting outside.</code></div>
+    </div>
+    <div class="usecase">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4Z"/></svg></div>
+      <div><h4>Voice notes &amp; transcripts</h4><p>Turn a long transcript into readable sentences; long text is handled in overlapping windows.</p><code class="example">a 2-minute voice note → paragraphs with full stops</code></div>
+    </div>
+    <div class="usecase">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1.2-4.3A8 8 0 1 1 21 12Z"/></svg></div>
+      <div><h4>Chat &amp; captions</h4><p>Tidy fast-typed messages or live captions for display, search or reading aloud.</p><code class="example">"आप कैसे हैं मैं ठीक हूँ" → आप कैसे हैं? मैं ठीक हूँ।</code></div>
+    </div>
+    <div class="usecase">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div>
+      <div><h4>Before other text models</h4><p>Sentence boundaries and capitals help translation, summarisation and text-to-speech downstream.</p><code class="example">split into sentences → speak each one</code></div>
+    </div>
+  </div>
+</section>
+
+<section id="quality">
+  <div class="section-head">
+    <div class="kicker">Quality</div>
+    <h2>Honest numbers</h2>
+    <p>Word-level F1 for the four marks (punctuation) and for capitalised words (capitals), on held-out test sets never used for training and on 70 hand-written messages in 15 languages.</p>
+  </div>
+  <table>
+    <thead><tr><th></th><th>Comma</th><th>XLM-R punctuation + true-case (47 languages)</th><th>XLM-R base, punctuation only</th></tr></thead>
+    <tbody>
+      <tr><td>Hinglish chat, punctuation / capitals</td><td><b>0.83 / 0.92</b></td><td>0.49 / 0.70</td><td>0.41 / —</td></tr>
+      <tr><td>English chat, punctuation / capitals</td><td><b>0.86 / 0.96</b></td><td>0.72 / 0.91</td><td>0.75 / —</td></tr>
+      <tr><td>Hand-written messages, punctuation / capitals</td><td><b>0.74 / 0.89</b></td><td>0.70 / 0.75</td><td>0.69 / —</td></tr>
+      <tr><td>Hand-written messages fully right</td><td><b>43%</b></td><td>26%</td><td>—</td></tr>
+      <tr><td>Formal text, 18 languages, punctuation / capitals</td><td>0.65 / <b>0.79</b></td><td><b>0.76</b> / 0.66</td><td>0.73 / —</td></tr>
+      <tr><td>Size</td><td><b>7.8 MB</b></td><td>1.1 GB</td><td>1.1 GB</td></tr>
+      <tr><td>Latency, one message, 1 CPU thread (laptop)</td><td><b>~0.3 ms</b></td><td>~39 ms</td><td>~22 ms</td></tr>
+    </tbody>
+  </table>
+  <p class="table-note">Comma is clearly better on chat and messages and capitalises better everywhere, at about 1/140 of the size. On long formal text (news, encyclopedia prose) the much larger XLM-R models place commas better. "!" vs "." is a judgement call it sometimes makes differently.</p>
+</section>
+
+<section id="api">
+  <div class="section-head">
+    <div class="kicker">Reference</div>
+    <h2>API at a glance</h2>
+  </div>
+  <table>
+    <thead><tr><th>Member</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>Comma(context)</code></td><td>Loads the bundled model. Implements <code>Closeable</code>.</td></tr>
+      <tr><td><code>restore(text)</code></td><td>Returns the text with punctuation and capitals restored. Existing punctuation is replaced; blank text returns <code>""</code>.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="pricing">
+  <div class="section-head">
+    <div class="kicker">Pricing &amp; license</div>
+    <h2>Free until you're big.</h2>
+    <p>No API key, no sign-up, no license file. Add Comma to your project and ship. It stays free until your product passes 10,000 monthly active devices, and there's never a limit on how often each device runs it.</p>
+  </div>
+  <div class="price-grid">
+    <div class="price-card featured">
+      <span class="price-badge">Start here</span>
+      <div class="plan">Community</div>
+      <div class="price">Free</div>
+      <p class="price-sub">For indie developers, startups and growing apps, up to 10,000 monthly active devices.</p>
+      <ul>
+        <li>Commercial use allowed</li>
+        <li>No API key, account or license file</li>
+        <li>Unlimited calls on every device</li>
+        <li>Runs fully on-device, with no tracking or phoning home</li>
+      </ul>
+      <a class="btn btn-primary" href="#install">Get started</a>
+    </div>
+    <div class="price-card">
+      <div class="plan">Commercial</div>
+      <div class="price">Let's talk</div>
+      <p class="price-sub">For products above 10,000 monthly active devices on any platform.</p>
+      <ul>
+        <li>One license per product, per model</li>
+        <li>Pricing that fits your scale</li>
+        <li>Direct support from the people who built it</li>
+        <li>Early access to model updates</li>
+      </ul>
+      <div class="price-contact"><a class="btn btn-secondary" href="mailto:raju348636@gmail.com?subject=Comma%20commercial%20license">Email</a><a class="btn btn-secondary" href="https://wa.me/916353321951">WhatsApp</a><a class="btn btn-secondary" href="tel:+916353321951">Call</a></div>
+    </div>
+    <div class="price-card">
+      <div class="plan">Custom models</div>
+      <div class="price">Built for you</div>
+      <p class="price-sub">A small, fast on-device model trained for your language, domain or task.</p>
+      <ul>
+        <li>Punctuation, moderation, classification, replies and more</li>
+        <li>Tuned on your use case and your users' languages</li>
+        <li>Shipped as a plain Kotlin library, like Comma</li>
+        <li>Private: your model runs on your users' devices</li>
+      </ul>
+      <div class="price-contact"><a class="btn btn-secondary" href="mailto:raju348636@gmail.com?subject=Custom%20model">Email</a><a class="btn btn-secondary" href="https://wa.me/916353321951">WhatsApp</a><a class="btn btn-secondary" href="tel:+916353321951">Call</a></div>
+    </div>
+  </div>
+  <div class="price-rules">
+    <div>
+      <h3>How devices are counted</h3>
+      <p>A monthly active device is a phone, tablet or other device that runs Comma at least once in a calendar month.</p>
+      <p>The 10,000 limit applies separately to each product, each platform (Android, iOS, web…) and each Hoverfly model. Crossed it? You have 30 days to get a commercial license.</p>
+    </div>
+    <div>
+      <h3>What the license does not allow</h3>
+      <ul>
+        <li>Selling or redistributing Comma or its model on its own, or inside another SDK</li>
+        <li>Extracting, modifying or fine-tuning the model weights</li>
+        <li>Using the model or its outputs to train or distill another model</li>
+        <li>Reverse engineering the model or its file format</li>
+        <li>Offering it as a hosted API for others</li>
+      </ul>
+    </div>
+  </div>
+  <p class="price-foot">Questions about licensing? Email <a href="mailto:raju348636@gmail.com">raju348636@gmail.com</a> or call / WhatsApp <a class="nowrap" href="tel:+916353321951">+91 63533 21951</a>. Full terms: <a href="https://github.com/rajumark/comma/blob/main/LICENSE">Hoverfly Community License</a>.</p>
+</section>
+
+
+<section id="faq">
+  <div class="section-head">
+    <div class="kicker">FAQ</div>
+    <h2>Questions</h2>
+  </div>
+  <div class="faq-item"><h4>What is Comma?</h4><p>An Android library that adds punctuation and capitals to text that has none, like voice typing, speech-to-text output or fast-typed chat.</p></div>
+  <div class="faq-item"><h4>Which languages does it support?</h4><p>English, Hinglish and Tanglish, Hindi, Bengali, Marathi, Gujarati, Punjabi, Tamil, Telugu, Kannada, Malayalam and Urdu, plus Spanish, French, German, Portuguese, Italian, Russian and Indonesian. Chinese, Japanese and Thai are not supported, because they don't put spaces between words. To detect the language first, use <a href="https://rajumark.github.io/beacon/">Beacon</a>.</p></div>
+  <div class="faq-item"><h4>What if my text already has some punctuation?</h4><p>Comma removes the marks it predicts (commas, full stops, question and exclamation marks) and adds its own, and re-cases the text. Other characters like apostrophes, numbers, emails and links are kept.</p></div>
+  <div class="faq-item"><h4>How long can the text be?</h4><p>Any length. Long text is cut into overlapping windows, so every word is judged with context on both sides.</p></div>
+  <div class="faq-item"><h4>Does it run on device?</h4><p>Yes. Inference runs entirely on the device in plain Kotlin. It makes no server calls, needs no network permission and sends no telemetry.</p></div>
+  <div class="faq-item"><h4>Is the Kotlin port exact?</h4><p>Token ids, every word's label and the restored text match the reference implementation on all 94 test vectors, both on the JVM and on an Android device.</p></div>
+  <div class="faq-item"><h4>How much does Comma cost?</h4><p>Nothing for products with up to 10,000 monthly active devices per platform, including commercial apps. There is no API key or account, and no limit on how often it runs. Above that, a commercial license is needed; see <a href="#pricing">Pricing</a>.</p></div>
+  <div class="faq-item"><h4>Can you build a model for my app?</h4><p>Yes. Hoverfly trains custom on-device models for your language, domain or task and ships them as a small library like this one. Email <a href="mailto:raju348636@gmail.com">raju348636@gmail.com</a> or call / WhatsApp +91 63533 21951.</p></div>
+</section>
+
+<footer>
+  <div class="foot-links">
+    <a href="https://github.com/rajumark/comma">GitHub</a>
+    <a href="https://github.com/rajumark/comma/blob/main/LICENSE">License</a>
+    <a href="https://rajumark.github.io/moji/">Moji</a>
+    <a href="https://rajumark.github.io/beacon/">Beacon</a>
+    <a href="https://rajumark.github.io/comeback/">Comeback</a>
+    <a href="https://rajumark.github.io/gatekeeper/">Gatekeeper</a>
+  </div>
+  <div class="copyright">© 2026 Hoverfly · Comma</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/kotlin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/java.min.js"></script>
+<script>
+  if (window.hljs) { document.querySelectorAll('pre code[class*="language-"]').forEach(function (b) { hljs.highlightElement(b); }); }
+</script>
+
+<script>
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.closest(".code-block").querySelector("pre code");
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent).then(function () {
+        var original = btn.textContent;
+        btn.textContent = "Copied";
+        btn.classList.add("copied");
+        window.setTimeout(function () {
+          btn.textContent = original;
+          btn.classList.remove("copied");
+        }, 1500);
+      });
+    });
+  });
+</script>
+
+<script>
+  // Real output from the model, rotating every 5 s: [input, output].
+  var DEMO = [["can you pick up the kids at 5 i am stuck in a meeting", "Can you pick up the kids at 5? I am stuck in a meeting."],
+              ["आप कैसे हैं मैं ठीक हूँ", "आप कैसे हैं? मैं ठीक हूँ।"],
+              ["where are you we are all waiting outside", "Where are you? We are all waiting outside."],
+              ["நீங்கள் எப்படி இருக்கிறீர்கள் நான் நலமாக இருக்கிறேன்", "நீங்கள் எப்படி இருக்கிறீர்கள்? நான் நலமாக இருக்கிறேன்."],
+              ["آپ کیسے ہیں میں ٹھیک ہوں", "آپ کیسے ہیں؟ میں ٹھیک ہوں۔"],
+              ["kal milte hain ok bye take care", "Kal milte hain, OK, bye. Take care."]];
+  (function () {
+    var demo = document.getElementById("heroDemo");
+    var i = 0;
+    function render(ex) {
+      document.getElementById("demoPrompt").textContent = 'comma.restore("' + ex[0] + '")';
+      document.getElementById("demoInput").textContent = ex[0];
+      var chips = document.getElementById("demoChips");
+      chips.innerHTML = "";
+      var a = document.createElement("span");
+      a.className = "restored";
+      a.textContent = ex[1];
+      chips.appendChild(a);
+    }
+    render(DEMO[0]);
+    window.setInterval(function () {
+      demo.classList.add("is-fading");
+      window.setTimeout(function () { i = (i + 1) % DEMO.length; render(DEMO[i]); demo.classList.remove("is-fading"); }, 350);
+    }, 5000);
+  })();
+</script>
+</body>
+</html>
