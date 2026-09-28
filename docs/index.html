@@ -362,6 +362,21 @@
   .hero-demo .prompt { font-family: var(--mono); color: var(--accent); }
   .hero-demo .input-row { border: 0; border-radius: 16px; box-shadow: var(--shadow); padding: 14px 18px; }
   @media (max-width: 640px) { .hero-demo { padding: 24px 18px; border-radius: 24px; } }
+  /* Hero demo: type, then a magic cursor fixes each mark */
+  .hero-demo { position: relative; }
+  .demo-bubble { display: block; max-width: 100%; min-height: 1.6em; font-size: 18px; line-height: 1.6; margin-bottom: 0; }
+  .demo-bubble .caret { display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: -0.15em; background: var(--accent); animation: caret-blink 1s steps(1) infinite; }
+  .demo-bubble .fix { border-radius: 4px; transition: background-color .8s ease, color .8s ease; }
+  .demo-bubble .fix.is-new { display: inline-block; background: var(--green); color: var(--green-ink); animation: fix-pop .35s ease; }
+  .magic-cursor { position: absolute; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 2; opacity: 0;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); transition: transform .5s cubic-bezier(.3,.7,.2,1), opacity .25s ease; }
+  .magic-cursor.is-visible { opacity: 1; }
+  .magic-cursor .spark { transform-origin: 22px 6.5px; animation: spark-spin 1.6s linear infinite; }
+  .magic-cursor.is-click path:first-child { transform: scale(.85); transform-origin: 3px 2px; }
+  @keyframes caret-blink { 50% { opacity: 0; } }
+  @keyframes fix-pop { 0% { transform: scale(.4); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  @keyframes spark-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .magic-cursor { display: none; } .demo-bubble .caret { animation: none; } }
 
   /* Buttons: 48px Material pills */
   .btn { height: 48px; padding: 0 24px; border: 0; font-size: 16px; font-weight: 500; justify-content: center; transition: box-shadow .2s, background .2s; }
@@ -495,9 +510,12 @@
   </div>
   <p class="hero-trust">Free up to 10k monthly active devices · No API key · Live on JitPack</p>
   <div class="hero-demo" id="heroDemo">
-    <div class="prompt" id="demoPrompt">comma.restore("can you pick up the kids at 5 i am stuck in a meeting")</div>
-    <div class="bubble" id="demoInput">can you pick up the kids at 5 i am stuck in a meeting</div>
-    <div class="chip-row" id="demoChips"></div>
+    <div class="prompt" id="demoPrompt">comma.restore(text)</div>
+    <div class="bubble demo-bubble" id="demoText">Can you pick up the kids at 5? I am stuck in a meeting.</div>
+    <svg class="magic-cursor" id="demoCursor" viewBox="0 0 28 28" aria-hidden="true">
+      <path d="M3 2 L3 21 L8.2 16.4 L11.6 24.2 L15 22.7 L11.7 15.1 L18.6 15.1 Z" fill="#000" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+      <path class="spark" d="M22 2 L23.1 5.4 L26.5 6.5 L23.1 7.6 L22 11 L20.9 7.6 L17.5 6.5 L20.9 5.4 Z" fill="var(--green)"/>
+    </svg>
   </div>
 </header>
 
@@ -844,31 +862,68 @@ comma.close()</code></pre>
 </script>
 
 <script>
-  // Real output from the model, rotating every 5 s: [input, output].
+  // Real English output from the model: [input, output]. Typed plainly, then fixed mark by mark.
   var DEMO = [["can you pick up the kids at 5 i am stuck in a meeting", "Can you pick up the kids at 5? I am stuck in a meeting."],
-              ["आप कैसे हैं मैं ठीक हूँ", "आप कैसे हैं? मैं ठीक हूँ।"],
-              ["where are you we are all waiting outside", "Where are you? We are all waiting outside."],
-              ["நீங்கள் எப்படி இருக்கிறீர்கள் நான் நலமாக இருக்கிறேன்", "நீங்கள் எப்படி இருக்கிறீர்கள்? நான் நலமாக இருக்கிறேன்."],
-              ["آپ کیسے ہیں میں ٹھیک ہوں", "آپ کیسے ہیں؟ میں ٹھیک ہوں۔"],
-              ["kal milte hain ok bye take care", "Kal milte hain, OK, bye. Take care."]];
+              ["where are you we are all waiting outside", "Where are you? We are all waiting outside."]];
   (function () {
     var demo = document.getElementById("heroDemo");
-    var i = 0;
-    function render(ex) {
-      document.getElementById("demoPrompt").textContent = 'comma.restore("' + ex[0] + '")';
-      document.getElementById("demoInput").textContent = ex[0];
-      var chips = document.getElementById("demoChips");
-      chips.innerHTML = "";
-      var a = document.createElement("span");
-      a.className = "restored";
-      a.textContent = ex[1];
-      chips.appendChild(a);
+    var box = document.getElementById("demoText");
+    var cursor = document.getElementById("demoCursor");
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    function sleep(ms) { return new Promise(function (r) { window.setTimeout(r, ms); }); }
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+
+    // Words line up one-to-one; each output word is the input word with new case and/or trailing marks.
+    function plan(raw, fixed) {
+      var rw = raw.split(" "), fw = fixed.split(" "), words = [], edits = [];
+      rw.forEach(function (r, i) {
+        var m = fw[i].match(/^(.*?)([.,?!]*)$/), core = el("span", "", r), mark = el("span");
+        words.push([core, mark]);
+        if (m[1] !== r) edits.push({ node: core, text: m[1] });
+        if (m[2]) edits.push({ node: mark, text: m[2] });
+      });
+      return { words: words, edits: edits };
     }
-    render(DEMO[0]);
-    window.setInterval(function () {
-      demo.classList.add("is-fading");
-      window.setTimeout(function () { i = (i + 1) % DEMO.length; render(DEMO[i]); demo.classList.remove("is-fading"); }, 350);
-    }, 5000);
+    function pointAt(node) {
+      var d = demo.getBoundingClientRect(), r = node.getBoundingClientRect();
+      var x = (r.width ? r.left + r.width / 2 : r.left) - d.left - 3;
+      var y = r.bottom - d.top - 6;
+      cursor.style.transform = "translate(" + x + "px," + y + "px)";
+    }
+    async function play(ex) {
+      box.textContent = "";
+      var typed = document.createTextNode(""), caret = el("span", "caret");
+      box.appendChild(typed); box.appendChild(caret);
+      for (var i = 0; i < ex[0].length; i++) {
+        typed.data += ex[0][i];
+        await sleep(ex[0][i] === " " ? 90 : 38 + Math.random() * 45);
+      }
+      await sleep(600);
+      // Swap the plain text for per-word spans that render identically.
+      var p = plan(ex[0], ex[1]);
+      box.textContent = "";
+      p.words.forEach(function (w, i) { if (i) box.appendChild(document.createTextNode(" ")); box.appendChild(w[0]); box.appendChild(w[1]); });
+      cursor.style.transition = "none"; pointAt(p.words[p.words.length - 1][1]);
+      cursor.offsetWidth; cursor.style.transition = "";
+      cursor.classList.add("is-visible");
+      await sleep(350);
+      for (var k = 0; k < p.edits.length; k++) {
+        var e = p.edits[k];
+        pointAt(e.node); await sleep(560);
+        cursor.classList.add("is-click");
+        e.node.textContent = e.text; e.node.className = "fix is-new";
+        await sleep(140); cursor.classList.remove("is-click");
+        (function (n) { window.setTimeout(function () { n.classList.remove("is-new"); }, 900); })(e.node);
+        await sleep(260);
+      }
+      await sleep(300);
+      cursor.classList.remove("is-visible");
+      await sleep(2800);
+      demo.classList.add("is-fading"); await sleep(380);
+      box.textContent = ""; demo.classList.remove("is-fading");
+      await sleep(300);
+    }
+    (async function loop() { var i = 0; for (;;) { await play(DEMO[i]); i = (i + 1) % DEMO.length; } })();
   })();
 </script>
 </body>
