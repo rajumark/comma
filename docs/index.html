@@ -330,6 +330,16 @@
   .verdict.bad { color:#d1242f; border-color:#d1242f; }
   .verdict.score { color: var(--text-secondary); }
   .chip-row .restored { font-size: 17px; font-weight: 500; color: var(--accent); }
+
+  /* App ideas */
+  .idea-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+  .idea {
+    display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
+  }
+  .idea .emo { font-size: 22px; line-height: 1.2; flex: none; }
+  .idea p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--text-secondary); }
+  .idea p b { color: var(--text); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -345,6 +355,7 @@
       <a href="#install">Install</a>
       <a href="#usage">Usage</a>
       <a href="#quality">Quality</a>
+      <a href="#ideas">Ideas</a>
       <a href="#api">API</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
@@ -525,6 +536,36 @@ comma.close()</code></pre>
       <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4Z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></div>
       <div><h4>Before other text models</h4><p>Sentence boundaries and capitals help translation, summarisation and text-to-speech downstream.</p><code class="example">split into sentences → speak each one</code></div>
     </div>
+  </div>
+</section>
+
+<section id="ideas">
+  <div class="section-head">
+    <div class="kicker">App ideas</div>
+    <h2>20 apps you could build with Comma</h2>
+    <p>Real problems Comma solves today. Pick one and ship it.</p>
+  </div>
+  <div class="idea-list">
+    <div class="idea"><span class="emo" aria-hidden="true">🎙️</span><p><b>Voice typing keyboard</b> · Punctuate dictated text before it lands in the text box.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">📝</span><p><b>Voice notes app</b> · Turn a long rambling voice note into readable sentences.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">📺</span><p><b>Live captions</b> · Add full stops and capitals to live captions so they are easy to follow.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">📧</span><p><b>Dictate emails</b> · Speak an email and send it properly punctuated, no manual fixing.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🧾</span><p><b>Meeting minutes</b> · Clean meeting transcripts into sentences before summarising them.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🩺</span><p><b>Doctor dictation</b> · Clinical notes dictated in Hinglish, punctuated privately on the phone.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">📔</span><p><b>Voice journal</b> · Speak your diary every night and read it back as clean paragraphs.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🎓</span><p><b>Lecture recorder</b> · Students get readable lecture transcripts, even offline in class.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🌐</span><p><b>Better translation</b> · Split text into sentences first so translation stops mangling run-on speech.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🔊</span><p><b>Natural text-to-speech</b> · Real commas and full stops give TTS voices proper pauses.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🤖</span><p><b>Clean input for LLMs</b> · Punctuate speech-to-text before sending it to a summariser or chatbot.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🎬</span><p><b>Subtitle generator</b> · Break speech-to-text output into proper subtitle sentences.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">📞</span><p><b>Call transcripts</b> · Make support-call transcripts readable for review and QA.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🚗</span><p><b>Driving mode messages</b> · Dictate a message hands-free and send it with correct punctuation.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">♿</span><p><b>Voice-first accessibility</b> · People who can't type send messages that read like typed ones.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🧑‍🌾</span><p><b>Field data collection</b> · Field workers dictate reports in Hindi or Telugu and get clean text.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">⚖️</span><p><b>Complaint &amp; FIR apps</b> · Citizens dictate complaints in their own language, saved as clean sentences.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">💬</span><p><b>Chat &quot;tidy up&quot; button</b> · Fix fast lowercase messages with one tap before sending.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🎧</span><p><b>Podcast show notes</b> · Turn raw episode transcripts into readable notes and quotes.</p></div>
+    <div class="idea"><span class="emo" aria-hidden="true">🔍</span><p><b>Search indexing</b> · Split transcripts into sentences so search can show exact matching lines.</p></div>
   </div>
 </section>
 
