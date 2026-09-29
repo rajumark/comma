@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0
+
+- Kotlin Multiplatform: Android, JVM desktop, iOS (arm64 device + simulator), macOS arm64,
+  JavaScript and WebAssembly, published to Maven Central as `io.github.rajumark:comma`.
+- New constructor `Comma()`: the model ships inside the library on every platform, so no
+  `Context` is needed. `Comma(context)` still compiles on Android (deprecated).
+- Same model and same results as 1.x; parity with the reference (94 vectors) is tested on every target.
+- The sample is now a Compose Multiplatform app (Android, desktop, iOS) plus a web page (JS and Wasm).
+
 ## 1.0.0
 
 - First version: `Comma(context).restore(text)` adds commas, full stops, question marks, exclamation marks and
