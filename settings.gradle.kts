@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "comma-kmp"
 include(":comma")
+include(":demo")
