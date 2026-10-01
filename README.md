@@ -1,6 +1,8 @@
 # Comma ✍️
 
-By Hoverfly. On-device punctuation and capitalisation for **Kotlin Multiplatform**: Android, iOS, macOS, JVM desktop, JavaScript and WebAssembly. It turns voice-typed or unpunctuated text into
+**[Website](https://rajumark.github.io/comma/)** · **[All Hoverfly models](https://rajumark.github.io/hoverfly/#models)** · [Maven Central](https://central.sonatype.com/artifact/io.github.rajumark/comma)
+
+By [Hoverfly](https://rajumark.github.io/hoverfly/). On-device punctuation and capitalisation for **Kotlin Multiplatform**: Android, iOS, macOS, JVM desktop, JavaScript and WebAssembly. It turns voice-typed or unpunctuated text into
 readable sentences: commas, full stops, question marks, exclamation marks and capitals.
 
 ```kotlin
@@ -176,6 +178,22 @@ for each word, the mark after it and its casing. Long text is cut into overlappi
 ## Publishing
 
 See [PUBLISHING.md](PUBLISHING.md).
+
+## More Hoverfly models
+
+Comma is one of eight small on-device models by [Hoverfly](https://rajumark.github.io/hoverfly/), all with the same install, the same free tier and nothing sent to a server.
+
+| Model | What it does | Source |
+|---|---|---|
+| 🙂 [Moji](https://rajumark.github.io/moji/) | Emoji suggestions in 22+ languages | [GitHub](https://github.com/rajumark/moji) |
+| 🗼 [Beacon](https://rajumark.github.io/beacon/) | Language and script detection, Hinglish included | [GitHub](https://github.com/rajumark/beacon) |
+| 💬 [Comeback](https://rajumark.github.io/comeback/) | Smart replies to tap | [GitHub](https://github.com/rajumark/comeback) |
+| 😊 [Emotion](https://rajumark.github.io/emotion/) | 28 emotions and an overall mood per message | [GitHub](https://github.com/rajumark/emotion) |
+| 🛡️ [Gatekeeper](https://rajumark.github.io/gatekeeper/) | Toxic message detection for Indian chat | [GitHub](https://github.com/rajumark/gatekeeper) |
+| 🏚️ [Hideout](https://rajumark.github.io/hideout/) | Finds and hides phone numbers, UPI, Aadhaar and more | [GitHub](https://github.com/rajumark/hideout) |
+| 🖍️ [Chalk](https://rajumark.github.io/chalk/) | Doodle recognition, 345 things from pen strokes | [GitHub](https://github.com/rajumark/chalk) |
+
+See them all on the [Hoverfly website](https://rajumark.github.io/hoverfly/#models).
 
 ## Pricing & license
 
